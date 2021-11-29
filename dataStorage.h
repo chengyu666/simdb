@@ -4,11 +4,11 @@ class DSMgr
 {
 public:
     DSMgr();
-    fstream OpenFile(string filename);
+    int OpenFile(string filename);
     int CloseFile();
-    //bFrame ReadPage(int page_id);
+    void ReadPage(int page_id);
     //int WritePage(int frame_id, bFrame frm);
-    int Seek(int offset, int pos);
+    //int Seek(int offset, int pos);
     //FILE *GetFile();
     //void IncNumPages();
     //int GetNumPages();
@@ -19,4 +19,7 @@ private:
     //FILE *currFile;
     int numPages;
     int pages[MAXPAGES];
+    int diskRead;
+    int diskWrite;
+    fstream dbfile;
 };
