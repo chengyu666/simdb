@@ -20,6 +20,6 @@ public:
 
 private:
     // Hash Table
-    //int ftop[FRAME_NUM];
-    //BCB *ptof[FRAME_NUM];
+    //int ftop[BUF_SIZE];
+    //BCB *ptof[BUF_SIZE];
 };

@@ -1,5 +1,9 @@
+.PHONY:simdb test
 clean:
 	rm simdb
+
+cleant:
+	rm test
 
 simdb:
 	g++ simdb.cpp dataStorage.cpp -o simdb

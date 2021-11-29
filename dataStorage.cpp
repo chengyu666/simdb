@@ -5,6 +5,8 @@ DSMgr::DSMgr()
 {
     diskRead = 0;
     diskWrite = 0;
+    numPages = 0;
+    memset(pageused, 0, MAXPAGES * sizeof(bool));
     return;
 }
 
@@ -18,7 +20,7 @@ int DSMgr::OpenFile(string filename)
     }
     else
     {
-        log(1, "data.dbf open failed.");
+        log(1, "data.dbf open failed!");
         exit(-1);
     }
 }
@@ -30,22 +32,56 @@ int DSMgr::CloseFile()
     return 0;
 }
 
-//并没有真正读取文件
-void DSMgr::ReadPage(int page_id)
+fstream DSMgr::GetFile()
 {
-    diskRead++;
-    if (DISK_DELAY > 0)
-    {
-        this_thread::sleep_for(chrono::milliseconds(DISK_DELAY));
-    }
+    return dbfile;
 }
 
-//并没有真正写入文件
-void DSMgr::WritePage(int page_id)
+//TODO 并没有真正读取文件
+bFrame DSMgr::ReadPage(int page_id)
 {
-    diskWrite++;
+    diskRead++;
+    log(0, "ReadPage: " + to_string(page_id));
+    bFrame f;
+    dbfile.seekg(page_id * PAGE_SIZE);
+    dbfile.read((char *)f.data, FRAME_SIZE);
     if (DISK_DELAY > 0)
     {
         this_thread::sleep_for(chrono::milliseconds(DISK_DELAY));
     }
+    return f;
+}
+
+//写入文件
+int DSMgr::WritePage(int frame_id, bFrame frm)
+{
+    diskWrite++;
+    log(0, "WritePage: " + to_string(frame_id));
+    dbfile.seekp(frame_id * FRAME_SIZE);
+    dbfile.write(frm.data, FRAME_SIZE);
+    if (DISK_DELAY > 0)
+    {
+        this_thread::sleep_for(chrono::milliseconds(DISK_DELAY));
+    }
+    return 0; //ok
+}
+
+void DSMgr::SetUse(int page_id, bool use_bit)
+{
+    pageused[page_id] = use_bit;
+}
+
+bool DSMgr::GetUse(int page_id)
+{
+    return pageused[page_id];
+}
+
+void DSMgr::IncNumPages()
+{
+    numPages++;
+}
+
+void DSMgr::GetNumPages()
+{
+    return numPages;
 }
