@@ -6,17 +6,18 @@
 class BMgr
 {
 public:
-    BMgr(DSMgr *dsmgr);
+    BMgr(DSMgr *dsmgr_i);
     // Interface functions
     int FixPage(int page_id, int prot);
-    // void NewPage FixNewPage();
+    // int FixNewPage();
     // int UnfixPage(int page_id);
     int NumFreeFrames();
-
+    bool FrameCheck(int frame_id);
     // Internal Functions
     //int SelectVictim();
-    //int Hash(int page_id);
-    //void RemoveBCB(BCB *ptr, int page_id);
+    int Hash(int page_id);
+    void RemoveBCB(BCB *ptr, int frame_id);
+
     //void RemoveLRUEle(int frid);
     void SetDirty(int frame_id);
     void UnsetDirty(int frame_id); //nouse?
@@ -30,5 +31,7 @@ private:
     BCB BCBtable[BUF_SIZE]; //store BCBs
     bFrame mem[BUF_SIZE];   //store frames
     DSMgr *dsmgr;
+    int hit_count;
+    int miss_count;
 };
 #endif

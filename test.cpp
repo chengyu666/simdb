@@ -19,6 +19,7 @@ int main()
     BMgr *bmgr = new BMgr(dsmgr);
     log(0, "free frame:" + to_string(bmgr->NumFreeFrames()));
     bmgr->PrintFrame(666);
+    bmgr->SetDirty(666);
     dsmgr->CloseFile();
     return 0;
 }

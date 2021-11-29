@@ -9,7 +9,7 @@
 struct BCB
 {
 public:
-    int page_id;
+    int page_id; //if is -1, means the frame is unused
     int frame_id;
     bool dirty;
     bool latch;
@@ -19,6 +19,15 @@ public:
 struct bFrame
 {
     char data[FRAME_SIZE];
+};
+
+struct LRUEle
+{
+    /* data */
+    int page_id;
+    int frame_id;
+    int count;
+    LRUEle *next;
 };
 
 #endif
