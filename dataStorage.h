@@ -1,5 +1,8 @@
 #include "global.h"
 using namespace std;
+
+#ifndef DS_H
+#define DS_H
 class DSMgr
 {
 public:
@@ -22,3 +25,4 @@ private:
     int diskWrite;           //write num
     fstream dbfile;          //physic file pointer
 };
+#endif

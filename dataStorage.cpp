@@ -32,11 +32,6 @@ int DSMgr::CloseFile()
     return 0;
 }
 
-fstream DSMgr::GetFile()
-{
-    return dbfile;
-}
-
 //TODO 并没有真正读取文件
 bFrame DSMgr::ReadPage(int page_id)
 {
@@ -81,7 +76,7 @@ void DSMgr::IncNumPages()
     numPages++;
 }
 
-void DSMgr::GetNumPages()
+int DSMgr::GetNumPages()
 {
     return numPages;
 }
