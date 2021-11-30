@@ -8,15 +8,15 @@ class BMgr
 public:
     BMgr(DSMgr *dsmgr_i);
     // Interface functions
-    int FixPage(int page_id, int prot);
+    BCB *FixPage(int page_id, int prot);
     // int FixNewPage();
     // int UnfixPage(int page_id);
     int NumFreeFrames();
-    bool FrameCheck(BCB* bcb);
+    bool FrameCheck(BCB *bcb);
     // Internal Functions
     int Hash(int page_id);
-    BCB* FindBCB_page(int page_id);
-    BCB* FindBCB_frame(int frame_id);
+    BCB *FindBCB_page(int page_id);
+    BCB *FindBCB_frame(int frame_id);
     void ptof_add(BCB *bcb);
     void ptof_remove(BCB *bcb);
     void SetDirty(BCB *bcb);
@@ -24,19 +24,19 @@ public:
     void WriteDirtys();
     void PrintFrame(BCB *bcb);
     int LRU_findpage(int page_id);
-    void LRU_fixpage(int page_id,BCB* bcb);
-    int LRU_replacevictim(int page_id);
+    void LRU_fixpage(int page_id, BCB *bcb);
+    BCB *LRU_findvictim();
     int LRU_findfreeframe();
     //void WriteFrameContent(int frame_id, char* content);
     void GetFrameContent(int frame_id, char *content);
 
 private:
     // Hash Table
-    int ftop[BUF_SIZE];  //frameid 2 pageid TODO apply
+    int ftop[BUF_SIZE];       //frameid 2 pageid TODO apply
     hashitem *ptof[BUF_SIZE]; //pageid 2 BCB
-    BCB *head;//LRU
-    BCB *tail;//MRU
-    bFrame mem[BUF_SIZE]; //store frames
+    BCB *head;                //LRU
+    BCB *tail;                //MRU
+    bFrame mem[BUF_SIZE];     //store frames
     DSMgr *dsmgr;
     int hit_count;
     int miss_count;

@@ -24,7 +24,8 @@ struct bFrame
 
 struct hashitem
 {
-    BCB *ptr;
+    int page_id;
+    BCB *bcb;
     hashitem *next;
 };
 

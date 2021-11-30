@@ -8,7 +8,7 @@ BMgr::BMgr(DSMgr *dsmgr_i)
     free_frame_num = BUF_SIZE;
     head = tail = nullptr;
 }
-int BMgr::FixPage(int page_id, int prot)
+BCB *BMgr::FixPage(int page_id, int prot)
 {
     //check if page is in buffer, if not, add it to buffer
     //return frame id
@@ -16,18 +16,19 @@ int BMgr::FixPage(int page_id, int prot)
     {
         //page is in buffer, hit
         hit_count++;
-        return prob_frame_id;
+        BCB *bcb = FindBCB_page(page_id);
+        //fix it
+        LRU_fixpage(page_id, bcb);
+        return bcb;
     }
     else
     {
         //page is not in buffer, miss
         miss_count++;
-        //TODO
-        BCB *victim = nullptr;
         if (NumFreeFrames() == BUF_SIZE)
         {
-            //find victim
-            victim = LRU_findvictim(page_id);
+            //buffer is full, find victim
+            BCB *victim = LRU_findvictim(page_id);
             //if dirty, write to disk
             if (victim->dirty)
             {
@@ -41,15 +42,19 @@ int BMgr::FixPage(int page_id, int prot)
             //add new bcb to ptof
             ptof_add(victim);
             //fix it
-            LRU_fixpage(page_id, victim->frame_id);
+            LRU_fixpage(page_id, victim);
+            return victim;
         }
         else
         {
-            //find free frame
+            //TODO: find free frame
+            BCB *bcb = LRU_findfreeframe();
+            //fix it
+            LRU_fixpage(page_id, bcb);
+            return bcb;
         }
-        LRU_fixpage(page_id, frame_id);
     }
-    return 0;
+    return nullptr;
 }
 
 int BMgr::NumFreeFrames()
@@ -112,21 +117,23 @@ void BMgr::SetDirty(BCB *bcb)
 
 void BMgr::UnsetDirty(BCB *bcb)
 {
-    if (FrameCheck(frame_id))
+    if (FrameCheck(bcb))
         return;
     bcb->dirty = false;
 }
 //write all dirty pages to disk
 void BMgr::WriteDirtys()
 {
-    for (int i = 0; i < BUF_SIZE; i++)
+    BCB *p = head;
+    //look for dirty pages in LRU chain
+    while (p != nullptr)
     {
-        if (FrameCheck(i))
-            continue;
-        if (//TODO ptof[i]->dirty)
+        if (p->dirty)
         {
-            dsmgr->WritePage(//TODO ptof[i]->page_id, mem[i]);
+            dsmgr->WritePage(p->page_id, mem[p->frame_id]);
+            p->dirty = false;
         }
+        p = p->next;
     }
 }
 
@@ -157,10 +164,9 @@ int BMgr::LRU_findpage(int page_id)
     }
 }
 
-int BMgr::LRU_findvictim(int page_id)
+BCB *BMgr::LRU_findvictim()
 {
     //makesure buffer is full before use this function
-    //find victim
     return head;
 }
 
