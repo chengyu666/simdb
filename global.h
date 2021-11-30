@@ -14,6 +14,7 @@ public:
     bool dirty;
     bool latch;
     int count;
+    BCB *next;
 };
 
 struct bFrame
@@ -21,13 +22,10 @@ struct bFrame
     char data[FRAME_SIZE];
 };
 
-struct LRUEle
+struct hashitem
 {
-    /* data */
-    int page_id;
-    int frame_id;
-    int count;
-    LRUEle *next;
+    BCB *ptr;
+    hashitem *next;
 };
 
 #endif

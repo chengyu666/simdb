@@ -48,11 +48,11 @@ bFrame DSMgr::ReadPage(int page_id)
 }
 
 //写入文件
-int DSMgr::WritePage(int frame_id, bFrame frm)
+int DSMgr::WritePage(int page_id, bFrame frm)
 {
     diskWrite++;
-    log(0, "WritePage: " + to_string(frame_id));
-    dbfile.seekp(frame_id * FRAME_SIZE);
+    log(0, "WritePage: " + to_string(page_id));
+    dbfile.seekp(page_id * FRAME_SIZE);
     dbfile.write(frm.data, FRAME_SIZE);
     if (DISK_DELAY > 0)
     {

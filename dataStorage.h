@@ -10,7 +10,7 @@ public:
     int OpenFile(string filename);
     int CloseFile();
     bFrame ReadPage(int page_id);
-    int WritePage(int frame_id, bFrame frm);
+    int WritePage(int page_id, bFrame frm);
     //int Seek(int offset, int pos); nouse
     fstream GetFile(); //nouse?
     void IncNumPages();
