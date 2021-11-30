@@ -26,14 +26,14 @@ public:
     int LRU_findpage(int page_id);
     void LRU_fixpage(int page_id, BCB *bcb);
     BCB *LRU_findvictim();
-    int LRU_findfreeframe();
+    BCB *LRU_findfreeframe();
     //void WriteFrameContent(int frame_id, char* content);
     void GetFrameContent(int frame_id, char *content);
 
 private:
     // Hash Table
     int ftop[BUF_SIZE];       //frameid 2 pageid TODO apply
-    hashitem *ptof[BUF_SIZE]; //pageid 2 BCB
+    hashitem *ptof[BUF_SIZE]; //buckets of hashitems
     BCB *head;                //LRU
     BCB *tail;                //MRU
     bFrame mem[BUF_SIZE];     //store frames

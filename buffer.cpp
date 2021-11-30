@@ -12,7 +12,7 @@ BCB *BMgr::FixPage(int page_id, int prot)
 {
     //check if page is in buffer, if not, add it to buffer
     //return frame id
-    if (LRU_findpage(page_id))
+    if (LRU_findpage(page_id) >= 0)
     {
         //page is in buffer, hit
         hit_count++;
@@ -28,7 +28,7 @@ BCB *BMgr::FixPage(int page_id, int prot)
         if (NumFreeFrames() == BUF_SIZE)
         {
             //buffer is full, find victim
-            BCB *victim = LRU_findvictim(page_id);
+            BCB *victim = LRU_findvictim();
             //if dirty, write to disk
             if (victim->dirty)
             {
@@ -73,7 +73,7 @@ bool BMgr::FrameCheck(BCB *bcb)
     else
         return false;
 }
-//hash pageid to frameid
+//hash pageid to bucket id
 int BMgr::Hash(int page_id)
 {
     //bucket num is BUF_SIZE
@@ -151,17 +151,15 @@ int BMgr::LRU_findpage(int page_id)
 {
     //if page is in buffer, return frame id
     //else return -1
-    int bucket_id = Hash(page_id);
-    //TODO
-    if (//TODO ptof[frame_id] != nullptr && //TODO ptof[frame_id]->page_id == page_id)
+    hashitem *p = ptof[Hash(page_id)];
+    while (p != nullptr)
     {
-        return frame_id;
+        if (p->page_id == page_id)
+            return p->bcb->frame_id;
+        p = p->next;
     }
-    else
-    {
-        log(0, "page not in buffer!");
-        return -1;
-    }
+    log(0, "page not in buffer!");
+    return -1;
 }
 
 BCB *BMgr::LRU_findvictim()
@@ -219,7 +217,7 @@ void BMgr::LRU_fixpage(int page_id, BCB *bcb)
         //frame is unused
         BCB *new_bcb = new BCB;
         new_bcb->page_id = page_id;
-        new_bcb->frame_id = frame_id;
+        new_bcb->frame_id = frame_id; //TODO
         new_bcb->dirty = false;
         new_bcb->latch = false;
         new_bcb->count = 0;
