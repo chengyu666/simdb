@@ -8,7 +8,7 @@ class BMgr
 public:
     BMgr(DSMgr *dsmgr_i);
     // Interface functions
-    BCB *FixPage(int page_id, int prot);
+    BCB *FixPage(int page_id, int rw);
     // int FixNewPage();
     // int UnfixPage(int page_id);
     int NumFreeFrames();
@@ -23,16 +23,16 @@ public:
     void UnsetDirty(BCB *bcb); //nouse?
     void WriteDirtys();
     void PrintFrame(BCB *bcb);
-    int LRU_findpage(int page_id);
-    void LRU_fixpage(int page_id, BCB *bcb);
-    BCB *LRU_findvictim();
+    //int LRU_findpage(int page_id);
+    void LRU_fixpage(BCB *bcb, bool is_new);
+    BCB *LRU_findandunfixvictim();
     BCB *LRU_findfreeframe();
     //void WriteFrameContent(int frame_id, char* content);
     void GetFrameContent(int frame_id, char *content);
 
 private:
     // Hash Table
-    int ftop[BUF_SIZE];       //frameid 2 pageid TODO apply
+    int ftop[BUF_SIZE];       //frameid 2 pageid, -1 means empty
     hashitem *ptof[BUF_SIZE]; //buckets of hashitems
     BCB *head;                //LRU
     BCB *tail;                //MRU

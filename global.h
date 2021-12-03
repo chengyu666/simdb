@@ -53,10 +53,17 @@ static void log(int level, string msg)
     case 1:
         cout << "[error] ";
         break;
+    case 2:
+        cout << "[debug] ";
+        break;
     default:
         cout << "[unknown] ";
         break;
     }
     cout << msg << endl;
+}
+static bool ptrisnull(void *ptr)
+{
+    return ptr == nullptr;
 }
 #endif

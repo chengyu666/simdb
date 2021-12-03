@@ -7,28 +7,36 @@ BMgr::BMgr(DSMgr *dsmgr_i)
     miss_count = 0;
     free_frame_num = BUF_SIZE;
     head = tail = nullptr;
+    //init ftop with -1
+    for (int i = 0; i < BUF_SIZE; i++)
+    {
+        ftop[i] = -1;
+    }
 }
-BCB *BMgr::FixPage(int page_id, int prot)
+BCB *BMgr::FixPage(int page_id, int rw)
 {
     //check if page is in buffer, if not, add it to buffer
-    //return frame id
-    if (LRU_findpage(page_id) >= 0)
+    BCB *result = FindBCB_page(page_id);
+    if (result != nullptr)
     {
         //page is in buffer, hit
         hit_count++;
+        log(0, "hit count: " + to_string(hit_count));
+        //find its bcb
         BCB *bcb = FindBCB_page(page_id);
         //fix it
-        LRU_fixpage(page_id, bcb);
-        return bcb;
+        LRU_fixpage(bcb, false);
+        result = bcb;
     }
     else
     {
         //page is not in buffer, miss
         miss_count++;
-        if (NumFreeFrames() == BUF_SIZE)
+        log(0, "miss_count: " + to_string(miss_count));
+        if (NumFreeFrames() == 0)
         {
             //buffer is full, find victim
-            BCB *victim = LRU_findvictim();
+            BCB *victim = LRU_findandunfixvictim();
             //if dirty, write to disk
             if (victim->dirty)
             {
@@ -37,24 +45,42 @@ BCB *BMgr::FixPage(int page_id, int prot)
             }
             //remove it from ptof
             ptof_remove(victim);
-            //change its page_id
+            //change its page_id, the frame id is still the same
             victim->page_id = page_id;
-            //add new bcb to ptof
+            //update hash table
             ptof_add(victim);
-            //fix it
-            LRU_fixpage(page_id, victim);
-            return victim;
+            //update ftop
+            ftop[victim->frame_id] = page_id;
+            //fix it, it is new
+            LRU_fixpage(victim, true);
+            result = victim;
         }
         else
         {
-            //TODO: find free frame
+            //find free frame
             BCB *bcb = LRU_findfreeframe();
+            //update its page_id
+            bcb->page_id = page_id;
+            //PrintFrame(bcb); //test
+            //update hash table
+            ptof_add(bcb);
+            //update ftop
+            ftop[bcb->frame_id] = page_id;
             //fix it
-            LRU_fixpage(page_id, bcb);
-            return bcb;
+            LRU_fixpage(bcb, true);
+            result = bcb;
         }
     }
-    return nullptr;
+    if (result == nullptr)
+    {
+        log(1, "FixPage error");
+        return nullptr;
+    }
+    if (rw == 1)
+    {
+        result->dirty = true;
+    }
+    return result;
 }
 
 int BMgr::NumFreeFrames()
@@ -84,8 +110,13 @@ BCB *BMgr::FindBCB_page(int page_id)
 {
     int bucket_id = Hash(page_id);
     hashitem *p = ptof[bucket_id];
+    if (p == nullptr)
+    {
+        log(2, "page_id: " + to_string(page_id) + " not in ptof");
+    }
     while (p != nullptr)
     {
+        log(2, to_string(p->page_id) + " " + to_string(page_id));
         if (p->page_id == page_id)
             //find the page, return BCB
             return p->bcb;
@@ -94,8 +125,10 @@ BCB *BMgr::FindBCB_page(int page_id)
     //not find the page, return nullptr
     return nullptr;
 }
+
 BCB *BMgr::FindBCB_frame(int frame_id)
 {
+    //find bcb in LRU chain
     BCB *p = head;
     while (p != nullptr)
     {
@@ -139,14 +172,15 @@ void BMgr::WriteDirtys()
 
 void BMgr::PrintFrame(BCB *bcb)
 {
-    cout << "----frame----\nframe_id: " << frame_id << endl;
+    cout << "----frame----\nframe_id: " << bcb->frame_id << endl;
     cout << "page_id: " << bcb->page_id << endl;
     cout << "dirty: " << bcb->dirty << endl;
     cout << "latch: " << bcb->latch << endl;
     cout << "count: " << bcb->count << endl;
-    cout << "content: " << mem[frame_id]->data << endl;
+    cout << "content: " << mem[bcb->frame_id].data << endl;
     cout << "-------------\n";
 }
+/*
 int BMgr::LRU_findpage(int page_id)
 {
     //if page is in buffer, return frame id
@@ -161,22 +195,70 @@ int BMgr::LRU_findpage(int page_id)
     log(0, "page not in buffer!");
     return -1;
 }
-
-BCB *BMgr::LRU_findvictim()
+*/
+BCB *BMgr::LRU_findandunfixvictim()
 {
     //makesure buffer is full before use this function
-    return head;
+    //find the victim
+    BCB *victim = head;
+    //remove it from LRU chain
+    head = head->next;
+    victim->next = nullptr;
+    return victim;
+}
+
+BCB *BMgr::LRU_findfreeframe()
+{
+    //makesure buffer is not full before use this function
+    //TODO: find free frame fron ftop
+    for (int i = 0; i < BUF_SIZE; i++)
+    {
+        //i is the frame id
+        if (ftop[i] == -1)
+        {
+            free_frame_num--;
+            BCB *bcb = new BCB;
+            bcb->frame_id = i;
+            bcb->page_id = -1;
+            bcb->dirty = false;
+            bcb->latch = false;
+            bcb->count = 0;
+            bcb->next = nullptr;
+            return bcb;
+        }
+    }
+    log(1, "buffer is full!");
+    return nullptr;
 }
 
 void BMgr::ptof_add(BCB *bcb)
 {
-    //add BCB to ptof
+    if (bcb == nullptr)
+    {
+        log(1, "add nullptr to ptof");
+        return;
+    }
     int bucket_id = Hash(bcb->page_id);
-    hashitem *p = new hashitem;
+    log(2, "in add,bucket id: " + to_string(bucket_id));
+    //check if already exist
+    hashitem *p = ptof[bucket_id];
+    while (p != nullptr)
+    {
+        if (p->page_id == bcb->page_id)
+        {
+            log(1, "hashitem already exist in ptof!");
+            return;
+        }
+        p = p->next;
+    }
+    //create new hash item
+    p = new hashitem;
     p->bcb = bcb;
+    p->page_id = bcb->page_id;
     //add to head
     p->next = ptof[bucket_id];
     ptof[bucket_id] = p;
+    log(2, "add to ptof");
 }
 
 void BMgr::ptof_remove(BCB *bcb)
@@ -187,6 +269,7 @@ void BMgr::ptof_remove(BCB *bcb)
     hashitem *q = nullptr;
     while (p != nullptr)
     {
+        //find out bcb
         if (p->bcb == bcb)
         {
             //remove from ptof
@@ -205,43 +288,35 @@ void BMgr::ptof_remove(BCB *bcb)
         q = p;
         p = p->next;
     }
-    log(1, "frame not in ptof!");
+    log(1, "hashitem not in ptof!");
 }
 
-void BMgr::LRU_fixpage(int page_id, BCB *bcb)
+void BMgr::LRU_fixpage(BCB *bcb, bool is_new)
 {
     //update LRU chain
-    //makesure frame is unused or use for this page
-    if (bcb == nullptr)
+    //makesure frame is used for this page
+    int page_id = bcb->page_id;
+    if (is_new)
     {
-        //frame is unused
-        BCB *new_bcb = new BCB;
-        new_bcb->page_id = page_id;
-        new_bcb->frame_id = frame_id; //TODO
-        new_bcb->dirty = false;
-        new_bcb->latch = false;
-        new_bcb->count = 0;
-        //update hash table
-        ptof_add(new_bcb);
-        ftop[frame_id] = page_id;
+        //frame is new, add to chain
         if (head == nullptr)
         {
-            //add first element
+            //add as chian's first element
             log(0, "add first elem 2 LRU chain.");
-            head = tail = new_bcb;
+            head = tail = bcb;
             return;
         }
         else
         {
-            //add new element to tail
-            tail->next = new_bcb;
-            tail = new_bcb;
+            //add element to tail
+            tail->next = bcb;
+            tail = bcb;
             return;
         }
     }
     else
     {
-        //frame is used, update LRU chain
+        //frame is already in chain, update LRU chain
         if (head->page_id == page_id)
         {
             //page's frame is in head
@@ -290,7 +365,9 @@ void BMgr::LRU_fixpage(int page_id, BCB *bcb)
 
 void BMgr::GetFrameContent(int frame_id, char *content)
 {
-    if (FrameCheck(frame_id))
+    //get bcb from frame id
+    BCB *bcb = FindBCB_frame(frame_id);
+    if (FrameCheck(bcb))
         return;
     strcpy(content, mem[frame_id].data);
 }
