@@ -5,6 +5,7 @@
 #define PAGE_SIZE 10   //number of bytes in a page
 #define FRAME_SIZE 10  //size of a frame, equal to PAGE_SIZE
 #define DISK_DELAY 0   //add latency on disk operations(ms)
+#define PRINTDBG true  //print debug messages
 
 struct BCB
 {
@@ -45,6 +46,8 @@ struct hashitem
 using namespace std;
 static void log(int level, string msg)
 {
+    if (level == 2 && !PRINTDBG)
+        return;
     switch (level)
     {
     case 0:

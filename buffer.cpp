@@ -15,13 +15,14 @@ BMgr::BMgr(DSMgr *dsmgr_i)
 }
 BCB *BMgr::FixPage(int page_id, int rw)
 {
+    //rw: 0-read 1-write
     //check if page is in buffer, if not, add it to buffer
     BCB *result = FindBCB_page(page_id);
     if (result != nullptr)
     {
         //page is in buffer, hit
         hit_count++;
-        log(0, "hit count: " + to_string(hit_count));
+        log(2, "hit count: " + to_string(hit_count));
         //find its bcb
         BCB *bcb = FindBCB_page(page_id);
         //fix it
@@ -32,7 +33,7 @@ BCB *BMgr::FixPage(int page_id, int rw)
     {
         //page is not in buffer, miss
         miss_count++;
-        log(0, "miss_count: " + to_string(miss_count));
+        log(2, "miss_count: " + to_string(miss_count));
         if (NumFreeFrames() == 0)
         {
             //buffer is full, find victim
@@ -239,7 +240,6 @@ void BMgr::ptof_add(BCB *bcb)
         return;
     }
     int bucket_id = Hash(bcb->page_id);
-    log(2, "in add,bucket id: " + to_string(bucket_id));
     //check if already exist
     hashitem *p = ptof[bucket_id];
     while (p != nullptr)
@@ -258,7 +258,7 @@ void BMgr::ptof_add(BCB *bcb)
     //add to head
     p->next = ptof[bucket_id];
     ptof[bucket_id] = p;
-    log(2, "add to ptof");
+    log(2, "add to ptof: " + to_string(p->page_id));
 }
 
 void BMgr::ptof_remove(BCB *bcb)
