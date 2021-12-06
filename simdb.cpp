@@ -62,7 +62,7 @@ int main()
         //break;
     }
     //write back all dirty pages
-    bmgr->WriteDirtys();
+    bmgr->LRU_WriteDirtys();
     end = clock();
 
     int hit = bmgr->GetHitCount();

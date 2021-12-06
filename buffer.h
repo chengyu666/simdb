@@ -23,7 +23,7 @@ public:
     void ptof_remove(BCB *bcb);
     void SetDirty(BCB *bcb);
     void UnsetDirty(BCB *bcb); //nouse?
-    void WriteDirtys();
+    void LRU_WriteDirtys();
     void PrintFrame(BCB *bcb);
     //int LRU_findpage(int page_id);
     void LRU_fixpage(BCB *bcb, bool is_new);

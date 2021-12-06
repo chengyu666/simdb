@@ -183,7 +183,7 @@ void BMgr::UnsetDirty(BCB *bcb)
     bcb->dirty = false;
 }
 //write all dirty pages to disk
-void BMgr::WriteDirtys()
+void BMgr::LRU_WriteDirtys()
 {
     BCB *p = head;
     //look for dirty pages in LRU chain
