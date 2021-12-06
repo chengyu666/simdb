@@ -32,11 +32,11 @@ int DSMgr::CloseFile()
     return 0;
 }
 
-//TODO 并没有真正读取文件
+//读取文件
 bFrame DSMgr::ReadPage(int page_id)
 {
     diskRead++;
-    log(0, "ReadPage: " + to_string(page_id));
+    log(2, "ReadPage: " + to_string(page_id));
     bFrame f;
     dbfile.seekg(page_id * PAGE_SIZE);
     dbfile.read((char *)f.data, FRAME_SIZE);
@@ -51,7 +51,7 @@ bFrame DSMgr::ReadPage(int page_id)
 int DSMgr::WritePage(int page_id, bFrame frm)
 {
     diskWrite++;
-    log(0, "WritePage: " + to_string(page_id));
+    log(2, "WritePage: " + to_string(page_id));
     dbfile.seekp(page_id * FRAME_SIZE);
     dbfile.write(frm.data, FRAME_SIZE);
     if (DISK_DELAY > 0)
@@ -79,4 +79,14 @@ void DSMgr::IncNumPages()
 int DSMgr::GetNumPages()
 {
     return numPages;
+}
+
+int DSMgr::GetDiskRead()
+{
+    return diskRead;
+}
+
+int DSMgr::GetDiskWrite()
+{
+    return diskWrite;
 }

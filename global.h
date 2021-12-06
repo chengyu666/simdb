@@ -5,7 +5,7 @@
 #define PAGE_SIZE 10   //number of bytes in a page
 #define FRAME_SIZE 10  //size of a frame, equal to PAGE_SIZE
 #define DISK_DELAY 0   //add latency on disk operations(ms)
-#define PRINTDBG true  //print debug messages
+#define PRINTDBG true //print debug messages
 
 struct BCB
 {
@@ -20,7 +20,7 @@ public:
 
 struct bFrame
 {
-    char data[FRAME_SIZE];
+    char data[FRAME_SIZE] = ".........";
 };
 
 struct hashitem
@@ -39,6 +39,7 @@ struct hashitem
 #include <fstream>
 #include <thread>
 #include <cstring>
+#include <time.h>
 #endif
 
 #ifndef __TOOLS__

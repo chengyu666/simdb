@@ -12,6 +12,8 @@ public:
     // int FixNewPage();
     // int UnfixPage(int page_id);
     int NumFreeFrames();
+    int GetHitCount();
+    int GetMissCount();
     bool FrameCheck(BCB *bcb);
     // Internal Functions
     int Hash(int page_id);
@@ -29,6 +31,7 @@ public:
     BCB *LRU_findfreeframe();
     //void WriteFrameContent(int frame_id, char* content);
     void GetFrameContent(int frame_id, char *content);
+    void SetFrameContent(int frame_id, char *content);
 
 private:
     // Hash Table
@@ -41,5 +44,6 @@ private:
     int hit_count;
     int miss_count;
     int free_frame_num;
+    string msg; //store debug message
 };
 #endif

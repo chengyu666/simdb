@@ -16,6 +16,8 @@ int main()
     log(0, newf.data);
     */
     // test buffer
+    clock_t start, end;
+    start = clock();
     BMgr *bmgr = new BMgr(dsmgr);
     log(0, "free frame:" + to_string(bmgr->NumFreeFrames()));
     bmgr->FixPage(666, 0);
@@ -27,5 +29,10 @@ int main()
     //bmgr->PrintFrame(666);
     //bmgr->SetDirty(666);
     dsmgr->CloseFile();
+    int i = 50000;
+    while (i--)
+        cout << "ohooooo" << endl;
+    end = clock();
+    log(0, "time:" + to_string((end - start) * 1.0 / CLOCKS_PER_SEC));
     return 0;
 }

@@ -17,6 +17,8 @@ public:
     int GetNumPages();
     void SetUse(int page_id, bool use_bit);
     bool GetUse(int page_id);
+    int GetDiskRead();
+    int GetDiskWrite();
 
 private:
     int numPages;

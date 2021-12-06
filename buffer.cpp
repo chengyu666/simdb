@@ -7,7 +7,7 @@ BMgr::BMgr(DSMgr *dsmgr_i)
     miss_count = 0;
     free_frame_num = BUF_SIZE;
     head = tail = nullptr;
-    //init ftop with -1
+    //init ftop with -1, mem data with nullptr
     for (int i = 0; i < BUF_SIZE; i++)
     {
         ftop[i] = -1;
@@ -22,7 +22,11 @@ BCB *BMgr::FixPage(int page_id, int rw)
     {
         //page is in buffer, hit
         hit_count++;
-        log(2, "hit count: " + to_string(hit_count));
+        msg = "hit: " + to_string(hit_count);
+        msg += " all: " + to_string(hit_count + miss_count);
+        log(2, msg);
+        msg = "freeframe: " + to_string(free_frame_num);
+        log(2, msg);
         //find its bcb
         BCB *bcb = FindBCB_page(page_id);
         //fix it
@@ -33,15 +37,20 @@ BCB *BMgr::FixPage(int page_id, int rw)
     {
         //page is not in buffer, miss
         miss_count++;
-        log(2, "miss_count: " + to_string(miss_count));
+        msg = "miss: " + to_string(miss_count);
+        msg += " all: " + to_string(hit_count + miss_count);
+        log(2, msg);
+        msg = "freeframe: " + to_string(free_frame_num);
+        log(2, msg);
         if (NumFreeFrames() == 0)
         {
             //buffer is full, find victim
             BCB *victim = LRU_findandunfixvictim();
+            //PrintFrame(victim);
             //if dirty, write to disk
-            if (victim->dirty)
+            if (victim->dirty) //TODO exist bug, not write
             {
-                dsmgr->WritePage(victim->page_id, mem[victim->frame_id]);
+                //dsmgr->WritePage(victim->page_id, mem[victim->frame_id]);
                 victim->dirty = false;
             }
             //remove it from ptof
@@ -54,6 +63,8 @@ BCB *BMgr::FixPage(int page_id, int rw)
             ftop[victim->frame_id] = page_id;
             //fix it, it is new
             LRU_fixpage(victim, true);
+            //read from disk
+            //mem[victim->frame_id] = dsmgr->ReadPage(page_id);
             result = victim;
         }
         else
@@ -62,13 +73,15 @@ BCB *BMgr::FixPage(int page_id, int rw)
             BCB *bcb = LRU_findfreeframe();
             //update its page_id
             bcb->page_id = page_id;
-            //PrintFrame(bcb); //test
+            //PrintFrame(bcb);
             //update hash table
             ptof_add(bcb);
             //update ftop
             ftop[bcb->frame_id] = page_id;
             //fix it
             LRU_fixpage(bcb, true);
+            //read from disk
+            //mem[bcb->frame_id] = dsmgr->ReadPage(page_id);
             result = bcb;
         }
     }
@@ -87,6 +100,18 @@ BCB *BMgr::FixPage(int page_id, int rw)
 int BMgr::NumFreeFrames()
 {
     return free_frame_num;
+}
+
+//get hit count
+int BMgr::GetHitCount()
+{
+    return hit_count;
+}
+
+//get miss count
+int BMgr::GetMissCount()
+{
+    return miss_count;
 }
 
 //return true if the frame is unused
@@ -117,7 +142,6 @@ BCB *BMgr::FindBCB_page(int page_id)
     }
     while (p != nullptr)
     {
-        log(2, to_string(p->page_id) + " " + to_string(page_id));
         if (p->page_id == page_id)
             //find the page, return BCB
             return p->bcb;
@@ -302,7 +326,7 @@ void BMgr::LRU_fixpage(BCB *bcb, bool is_new)
         if (head == nullptr)
         {
             //add as chian's first element
-            log(0, "add first elem 2 LRU chain.");
+            log(2, "add first elem 2 LRU chain.");
             head = tail = bcb;
             return;
         }
@@ -370,4 +394,13 @@ void BMgr::GetFrameContent(int frame_id, char *content)
     if (FrameCheck(bcb))
         return;
     strcpy(content, mem[frame_id].data);
+}
+
+void BMgr::SetFrameContent(int frame_id, char *content)
+{
+    //get bcb from frame id
+    BCB *bcb = FindBCB_frame(frame_id);
+    if (FrameCheck(bcb))
+        return;
+    strcpy(mem[frame_id].data, content);
 }
