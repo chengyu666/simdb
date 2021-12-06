@@ -1,13 +1,14 @@
 #include "buffer.h"
 
-BMgr::BMgr(DSMgr *dsmgr_i)
+BMgr::BMgr()
 {
-    this->dsmgr = dsmgr;
+    this->dsmgr = new DSMgr();
+    dsmgr->OpenFile("data.dbf");
     hit_count = 0;
     miss_count = 0;
     free_frame_num = BUF_SIZE;
     head = tail = nullptr;
-    //init ftop with -1, mem data with nullptr
+    //init ftop with -1
     for (int i = 0; i < BUF_SIZE; i++)
     {
         ftop[i] = -1;
@@ -29,6 +30,11 @@ BCB *BMgr::FixPage(int page_id, int rw)
         log(2, msg);
         //find its bcb
         BCB *bcb = FindBCB_page(page_id);
+        //update its dirty
+        if (rw == 1)
+        {
+            bcb->dirty = true;
+        }
         //fix it
         LRU_fixpage(bcb, false);
         result = bcb;
@@ -51,6 +57,7 @@ BCB *BMgr::FixPage(int page_id, int rw)
             if (victim->dirty) //TODO exist bug, not write
             {
                 //dsmgr->WritePage(victim->page_id, mem[victim->frame_id]);
+                dsmgr->diskWrite++;
                 victim->dirty = false;
             }
             //remove it from ptof
@@ -64,7 +71,7 @@ BCB *BMgr::FixPage(int page_id, int rw)
             //fix it, it is new
             LRU_fixpage(victim, true);
             //read from disk
-            //mem[victim->frame_id] = dsmgr->ReadPage(page_id);
+            dsmgr->diskRead++;
             result = victim;
         }
         else
@@ -81,7 +88,7 @@ BCB *BMgr::FixPage(int page_id, int rw)
             //fix it
             LRU_fixpage(bcb, true);
             //read from disk
-            //mem[bcb->frame_id] = dsmgr->ReadPage(page_id);
+            dsmgr->diskRead++;
             result = bcb;
         }
     }
@@ -153,17 +160,13 @@ BCB *BMgr::FindBCB_page(int page_id)
 
 BCB *BMgr::FindBCB_frame(int frame_id)
 {
-    //find bcb in LRU chain
-    BCB *p = head;
-    while (p != nullptr)
+    int page_id = ftop[frame_id];
+    if (page_id == -1)
     {
-        if (p->frame_id == frame_id)
-            //find the frame, return BCB
-            return p;
-        p = p->next;
+        log(1, "try to find unexist frame!");
+        return nullptr;
     }
-    //not find the frame, return nullptr
-    return nullptr;
+    return FindBCB_page(page_id);
 }
 
 void BMgr::SetDirty(BCB *bcb)
@@ -188,7 +191,8 @@ void BMgr::WriteDirtys()
     {
         if (p->dirty)
         {
-            dsmgr->WritePage(p->page_id, mem[p->frame_id]);
+            //dsmgr->WritePage(p->page_id, mem[p->frame_id]);
+            dsmgr->diskWrite++;
             p->dirty = false;
         }
         p = p->next;

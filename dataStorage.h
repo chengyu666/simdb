@@ -19,12 +19,12 @@ public:
     bool GetUse(int page_id);
     int GetDiskRead();
     int GetDiskWrite();
+    int diskRead;  //read num
+    int diskWrite; //write num
 
 private:
     int numPages;
     bool pageused[MAXPAGES]; //record if a page is used
-    int diskRead;            //read num
-    int diskWrite;           //write num
     fstream dbfile;          //physic file pointer
 };
 #endif

@@ -6,7 +6,7 @@
 class BMgr
 {
 public:
-    BMgr(DSMgr *dsmgr_i);
+    BMgr();
     // Interface functions
     BCB *FixPage(int page_id, int rw);
     // int FixNewPage();
@@ -32,6 +32,7 @@ public:
     //void WriteFrameContent(int frame_id, char* content);
     void GetFrameContent(int frame_id, char *content);
     void SetFrameContent(int frame_id, char *content);
+    DSMgr *dsmgr; //disk manager
 
 private:
     // Hash Table
@@ -40,7 +41,6 @@ private:
     BCB *head;                //LRU
     BCB *tail;                //MRU
     bFrame mem[BUF_SIZE];     //store frames
-    DSMgr *dsmgr;
     int hit_count;
     int miss_count;
     int free_frame_num;
