@@ -37,8 +37,6 @@ void WritePage(int page_id, char *content = nullptr)
 
 int main()
 {
-    // = new DSMgr();
-    //dsmgr->OpenFile("data.dbf");
     bmgr = new BMgr();
     ifstream fin(fileName);
     string line, rw, pageid;
