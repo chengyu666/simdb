@@ -28,7 +28,7 @@ public:
     //int LRU_findpage(int page_id);
     void LRU_fixpage(BCB *bcb, bool is_new);
     BCB *LRU_findandunfixvictim();
-    BCB *LRU_findfreeframe();
+    BCB *findfreeframe();
     //void WriteFrameContent(int frame_id, char* content);
     void GetFrameContent(int frame_id, char *content);
     void SetFrameContent(int frame_id, char *content);

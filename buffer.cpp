@@ -71,13 +71,14 @@ BCB *BMgr::FixPage(int page_id, int rw)
             //fix it, it is new
             LRU_fixpage(victim, true);
             //read from disk
+            //dsmgr->ReadPage(page_id, mem[victim->frame_id]);
             dsmgr->diskRead++;
             result = victim;
         }
         else
         {
             //find free frame
-            BCB *bcb = LRU_findfreeframe();
+            BCB *bcb = findfreeframe();
             //update its page_id
             bcb->page_id = page_id;
             //PrintFrame(bcb);
@@ -236,10 +237,10 @@ BCB *BMgr::LRU_findandunfixvictim()
     return victim;
 }
 
-BCB *BMgr::LRU_findfreeframe()
+BCB *BMgr::findfreeframe()
 {
     //makesure buffer is not full before use this function
-    //TODO: find free frame fron ftop
+    //find free frame fron ftop
     for (int i = 0; i < BUF_SIZE; i++)
     {
         //i is the frame id

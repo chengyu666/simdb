@@ -15,8 +15,8 @@ void ReadPage(int page_id)
         //read content from memory
         char content[10];
         bmgr->GetFrameContent(bcb->frame_id, content);
-        cout << "page id: " << page_id;
-        cout << " content: " << content << endl;
+        //cout << "page id: " << page_id;
+        //cout << " content: " << content << endl;
     }
 }
 

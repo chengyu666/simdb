@@ -1,16 +1,16 @@
 #ifndef __DEFINES__
 #define __DEFINES__
-#define MAXPAGES 50000 //TODO
+#define MAXPAGES 50000 //max number of pages
 #define BUF_SIZE 1024  //number of buffer blocks
 #define PAGE_SIZE 10   //number of bytes in a page
 #define FRAME_SIZE 10  //size of a frame, equal to PAGE_SIZE
-#define DISK_DELAY 0   //add latency on disk operations(ms)
+#define DISK_DELAY 1   //add latency on disk operations(ms)
 #define PRINTDBG false //print debug messages
 
 struct BCB
 {
 public:
-    int page_id; //if is -1, means the frame is unused
+    int page_id; //if ==-1, means the frame is unused
     int frame_id;
     bool dirty;
     bool latch;
